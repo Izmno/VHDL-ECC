@@ -23,24 +23,20 @@
 --------------------------------------------------------------------------------
 -- Author(s):       Simon De Meyere
 -- 
--- File Name:       unittest_hamming.vhdl
+-- File Name:       biterror.vhdl
 -- File Type:       VHDL Package
 --
--- Create Date:     14 feb 2021
--- Design Name:     unittest_hamming
--- Module Name:     unittest_hamming
+-- Create Date:     18 feb 2021
+-- Design Name:     biterror
+-- Module Name:     biterror
 -- Project Name:    ECC
 -- Target Devices: 
 -- Tool Versions:   ghdl 0.37
 -- Description: 
---   Package overloads of the run_test procedure in the unittest package
---   for datatypes of the package `hamming`. More specifically:
---   run_test(testrun_t, string, string, hamming_t, hamming_t) and
---   run_test(testrun_t, string, string, intvec_t, intvec_t)
---
+-- 
 -- Dependencies:
---   - pkg_hamming
---   - unittest
+--   - (ieee.std_logic_1164) 
+--   - vectors
 -- 
 -- Revision:        0.01
 -- Revision log:    0.01 - File Created (11 feb 2021)
@@ -51,36 +47,50 @@
 -- 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+
 library work;
-use work.hamming.all;
 use work.vectors.all;
-use work.unittest.all;
 
----------------------------------
--- UNITTEST_HAMMING            --
----------------------------------
-package unittest_hamming is
-    -----------------------------
-    -- PROCEDURE PROTOTYPES    --
-    -----------------------------
-    -- Description in body     --
-    -----------------------------
-    procedure run_test(run: inout testrun_t; name: in string; description: in string; expected: in hamming_t; result: in hamming_t);
-end package unittest_hamming;
+package biterror is 
+    function flip_bit(v: vector; b: integer) return vector;
+    function flip_bit(v: std_logic_vector; b: integer) return std_logic_vector;
 
----------------------------------
--- UNITTEST_MATRIX BODY        --
----------------------------------
-package body unittest_hamming is
-    -----------------------------
-    -- PROCEDURE BODIES        --
-    -----------------------------
-    procedure run_test(run: inout testrun_t; name: in string; description: in string; expected: in hamming_t; result: in hamming_t) is 
+    function flip_bit(v: vector; b: intvec_t) return vector;
+    function flip_bit(v: std_logic_vector; b: intvec_t) return vector;
+end package biterror;
+
+package body biterror;
+    function flip_bit(v: vector; b: integer) return vector is 
+        variable v_std: vector(v'length - 1 downto 0) := v;
     begin 
-        start_test(run, name, description, to_string(expected), to_string(result));
-        finish_test(run, expected = result);
-    end procedure run_test;
+        if b > v'length - 1 or b < 0 then
+            assert false
+                report "Bit index out of range. No bits are flipped."
+                severity info;
+        else 
+            v_std(b) := not v_std(b);
+        end if;
+        return v_std;
+    end function;
 
-end package body unittest_hamming;
+    function flip_bit(v: std_logic_vector; b: integer) return std_logic_vector;
+    begin 
+        return to_logic_vector(flip_bit(to_vector(v), b));
+    end function;
 
-     
+    function flip_bit(v: vector; b: intvec_t) return vector is
+        variable v_std(v'length - 1 downto 0) := v;
+    begin 
+        for i in b'range loop
+            v_std := flip_bit(v_std, b(i));
+        end loop;
+        return v_std;
+    end function;
+
+    function flip_bit(v: std_logic_vector; b: intvec_t) return vector is 
+    begin 
+        return to_logic_vector(flip_bit(to_vector(v), b));
+    end function;
+end package body biterror;

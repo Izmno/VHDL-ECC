@@ -79,17 +79,12 @@ package hamming is
           extended: boolean;
      end record hamming_t;
 
-     -- intvec_t
-     -- 
-     -- Integer vector type
-     type intvec_t is array ( integer range <> ) of integer;
 
      -----------------------------
      -- FUNCTION PROTOTYPES
      -----------------------------
 
      function to_string(h: hamming_t) return string;
-     function to_string(v: intvec_t) return string;
 
      function cond_increment(i: integer; c: boolean) return integer;
 
@@ -118,13 +113,10 @@ package hamming is
      -- function encode_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
      -- function encode_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
 
-     -- function syndrome(p_check_matrix: matrix; data: std_logic_vector) return std_logic_vector;
-     -- function syndrome(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
-     -- function syndrome(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
+     -- function syndrome(p_check_matrix: matrix; code: std_logic_vector) return std_logic_vector;
+     -- function syndrome(p: integer; e: boolean; code: std_logic_vector) return std_logic_vector;
+     -- function syndrome(hamming: hamming_t; code: std_logic_vector) return std_logic_vector;
 
-     -- function syndrome_chkbits(p_check_matrix: matrix; data: std_logic_vector) return std_logic_vector;
-     -- function syndrome_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
-     -- function syndrome_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
 
      -- function get_num_errors(syndrome: std_logic_vector; e: boolean) return integer;
      -- function get_num_errors(syndrome: std_logic_vector; h: hamming_t) return integer;
@@ -170,25 +162,6 @@ package body hamming is
           write(bfr, string'(" extended: "));
           write(bfr, boolean'image(h.extended) & LF);
           write(bfr, string'("}"));
-          return bfr.all;
-     end function to_string;
-
-     -- to_string 
-     -- 
-     -- Utility function which returns a string representation of a 
-     -- integer vector type object. 
-     --
-     -- @param v: intvec_t: the object to turn into a string 
-     -- @returns string: the string representation
-     function to_string(v: intvec_t) return string is
-          variable bfr: line;
-     begin 
-          write(bfr, string'("( "));
-          for i in v'range loop
-               write(bfr, integer'image(v(i)));
-               write(bfr, string'(" "));
-          end loop;
-          write(bfr, string'(")"));
           return bfr.all;
      end function to_string;
 
@@ -486,20 +459,21 @@ package body hamming is
      function encode(gen_matrix: matrix; data: std_logic_vector) return std_logic_vector is 
           variable v_in : vector(gen_matrix'range(1));
      begin 
-          if data'length > v_in'length then
-               assert false 
-                    report "Data vector is too long for this generator matrix, cropping to " 
-                         & integer'image(v_in'length)
-                         & " bits"
-                    severity warning;
-               v_in := to_vector(data(v_in'range));
-          elsif data'length = v_in'length then 
-               v_in := to_vector(data);
-          else
-               v_in(v_in'range'left - 1 downto data'length) := (others => '0');
-               v_in(data'range'left downto 0) := to_vector(data);
-          end if;
-          return to_logic_vector(v_in * gen_matrix);
+          return encode(gen_matrix, gen_matrix'length(1), data);
+          -- if data'length > v_in'length then
+          --      assert false 
+          --           report "Data vector is too long for this generator matrix, cropping to " 
+          --                & integer'image(v_in'length)
+          --                & " bits"
+          --           severity warning;
+          --      v_in := to_vector(data(v_in'range));
+          -- elsif data'length = v_in'length then 
+          --      v_in := to_vector(data);
+          -- else
+          --      v_in(v_in'range'left - 1 downto data'length) := (others => '0');
+          --      v_in(data'range'left downto 0) := to_vector(data);
+          -- end if;
+          -- return to_logic_vector(v_in * gen_matrix);
      end function encode;
 
      -- encode 
@@ -568,17 +542,35 @@ package body hamming is
      -- @param data: std_logic_vector: The data to be encoded
      -- @returns std_logic_vector: The encoded string
      function encode(gen_matrix: matrix; d: integer; data: std_logic_vector) return std_logic_vector is 
-          variable width: integer;
+          variable data_bits: integer;
+          variable data_bits_available: integer;
+          variable parity_bits: integer;
+          variable data_std: vector(data'length - 1 downto 0) := to_vector(data);
+          variable data_v: vector(gen_matrix'length(1) - 1 downto 0) := (others => '0');
+          variable code: std_logic_vector(gen_matrix'length(2) - 1 downto 0);
      begin 
-          if d > gen_matrix'length(2) then 
+          parity_bits := gen_matrix'length(2) - gen_matrix'length(1);
+
+          if d > gen_matrix'length(1) then 
                assert false 
-                    report "The number of data bits is larger than the maximum allowed."
+                    report "The number of data bits is larger than the maximum allowed, cropping to " & integer'image(gen_matrix'length(1)) & " bits"
                     severity warning;
-               width := gen_matrix'length(2);
-          else 
-               width := d;
+               data_bits := gen_matrix'length(1);
+          else
+               data_bits := d;
           end if;
-          return encode(gen_matrix, data)(width - 1 downto 0);          
+          
+          if data'length < data_bits then
+               data_bits_available := data'length;
+          else 
+               data_bits_available := data_bits;
+          end if;
+
+          data_v(data_bits_available - 1 downto 0) := data_std(data_bits_available - 1 downto 0);
+
+          code := to_logic_vector(data_v * gen_matrix);
+          return code(parity_bits + data_bits - 1 downto 0);
+      
      end function encode;
 
      -- encode 

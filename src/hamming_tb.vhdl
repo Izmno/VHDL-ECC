@@ -163,20 +163,52 @@ begin
 
         run_test(
             run, 
-            "encode(integer, integer, boolean, std_logic_vector)",
-            "",
+            "encode(integer, boolean, std_logic_vector)",
+            "Encoding a 4 bit string without extra parity bit",
             "1011010",
-            encode(3, 7, false, "1011")
+            encode(3, false, "1011")
         );
 
         run_test(
             run, 
-            "encode(integer, integer, boolean, std_logic_vector)",
-            "",
-            "1011010",
-            encode(3, 7, true, "1011")
+            "encode(integer, boolean, std_logic_vector)",
+            "Encoding a 4 bit string with extra parity bit",
+            "10110100",
+            encode(3, true, "1011")
         );
         
+        run_test(
+            run, 
+            "encode(integer, boolean, std_logic_vector)",
+            "Encoding a 4 bit string with too many parity bits according to spec",
+            "0000000000000000000000101111101",
+            encode(5, false, "1011")
+        );
+
+        run_test(
+            run, 
+            "encode(integer, boolean, std_logic_vector)",
+            "Encoding a 9 bit string with too little parity bits according to spec",
+            "0010110",
+            encode(3, false, "010010010")
+        );
+
+
+        run_test(
+            run, 
+            "encode(integer, integer, boolean, std_logic_vector)",
+            "Encoding a 32 bit string with with extended hamming code",
+            "010101011010101011111111001000100001001",
+            encode(6, 32, true, "01010101" & "10101010" & "11111111" & "00100010")
+        );
+
+        run_test(
+            run, 
+            "encode(integer, integer, boolean, std_logic_vector)'length",
+            "Checking length of output vector in previous example",
+            39,
+            encode(6, 32, true, "01010101" & "10101010" & "11111111" & "00100010")'length
+        );
         wait; 
     end process;
         

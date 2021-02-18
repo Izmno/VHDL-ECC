@@ -36,8 +36,9 @@
 --   Package overloads of the run_test procedure in the unittest package
 --   for datatypes of the package vectors. More specifically:
 --   run_test(testrun_t, string, string, matrix, matrix),
---   run_test(testrun_t, string, string, vector, vector) and
---   run_test(testrun_t, string, string, tuple, tuple)
+--   run_test(testrun_t, string, string, vector, vector),
+--   run_test(testrun_t, string, string, tuple, tuple) and
+--   run_test(testrun_t, string, string, intvec_t, intvec_t)
 --
 -- Dependencies:
 --   - gf2_linear
@@ -59,6 +60,8 @@ use work.unittest.all;
 package unittest_vectors is
     procedure run_test(run: inout testrun_t; name: in string; description: in string; expected: in matrix; result: in matrix);
     procedure run_test(run: inout testrun_t; name: in string; description: in string; expected: in vector; result: in vector);
+    procedure run_test(run: inout testrun_t; name: in string; description: in string; expected: in tuple; result: in tuple);
+    procedure run_test(run: inout testrun_t; name: in string; description: in string; expected: in intvec_t; result: in intvec_t);
 end package unittest_vectors;
 
 package body unittest_vectors is
@@ -75,6 +78,12 @@ package body unittest_vectors is
     end procedure run_test;
 
     procedure run_test(run: inout testrun_t; name: in string; description: in string; expected: in tuple; result: in tuple) is 
+    begin 
+        start_test(run, name, description, to_string(expected), to_string(result));
+        finish_test(run, expected = result);
+    end procedure run_test;
+
+    procedure run_test(run: inout testrun_t; name: in string; description: in string; expected: in intvec_t; result: in intvec_t) is
     begin 
         start_test(run, name, description, to_string(expected), to_string(result));
         finish_test(run, expected = result);

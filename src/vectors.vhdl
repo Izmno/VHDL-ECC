@@ -42,6 +42,9 @@
 --    Where possible or necessary, these data types have standardized 
 --    ascending ranges going from 1 to their length.
 -- 
+--    An auxiliary data type (intvec_t) is defined to help with some utility
+--    function
+-- 
 --    Standard VHDL boolean operators are provided for these data types
 --    which are always interpreted as elementwise operations,
 --    as well as '+' (xor, addition), '*' (and, multiplication, 
@@ -85,6 +88,7 @@ package vectors is
     type matrix is array (integer range <>, integer range <>) of std_logic;
     type vector is array (integer range <>) of std_logic;
     type tuple is array (1 to 2) of integer;
+    type intvec_t is array ( integer range <> ) of integer;
 
     
     -----------------------------
@@ -253,6 +257,7 @@ package vectors is
     function to_string(a: vector) return string;
     function to_string(a: tuple) return string;
     function to_string(a: std_logic_vector) return string;
+    function to_string(v: intvec_t) return string;
     function pkg_matrix_to_string(a: std_logic) return string; 
 
     
@@ -522,7 +527,7 @@ package body vectors is
             report "Incompatible matrix sizes for elementwise addition"
             severity error;
         for i in o_std'range(1) loop
-            for j in o_std'range(1) loop
+            for j in o_std'range(2) loop
                 o_std(i, j) := a_std(i, j) + b_std(i, j);
             end loop;
         end loop;
@@ -729,7 +734,7 @@ package body vectors is
             report "Incompatible matrix sizes for matrix product"
             severity error;
         for i in o_std'range(1) loop
-            for j in o_std'range(1) loop
+            for j in o_std'range(2) loop
                 o_std(i, j) := '0';
                 for r in a_std'range(2) loop
                     o_std(i, j) := o_std(i, j) + (a_std(i, r) * b_std(r, j));
@@ -1133,6 +1138,18 @@ package body vectors is
     begin 
         return to_string(to_vector(a));
     end function;
+
+    function to_string(v: intvec_t) return string is
+        variable bfr: line;
+    begin 
+        write(bfr, string'("( "));
+        for i in v'range loop
+            write(bfr, integer'image(v(i)));
+            write(bfr, string'(" "));
+        end loop;
+        write(bfr, string'(")"));
+        return bfr.all;
+    end function to_string;
 
     function pkg_matrix_to_string(a: std_logic) return string is
         variable c: string(1 downto 1);
