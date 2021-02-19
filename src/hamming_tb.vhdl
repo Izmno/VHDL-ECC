@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library std;
 use std.textio.all;
@@ -10,6 +11,7 @@ use work.vectors.all;
 use work.unittest.all;
 use work.unittest_hamming.all;
 use work.unittest_vectors.all;
+use work.biterror.all;
 
 entity hamming_tb is
 end hamming_tb;
@@ -22,6 +24,11 @@ begin
             "Hamming Unittests", 
             "Basic unittests for all functions in the Hamming package"
         ); 
+
+
+        variable data : std_logic_vector(7 downto 0);
+        variable code : std_logic_vector(11 downto 0);
+        variable code_extended : std_logic_vector(12 downto 0);
     begin
 
         run_test(
@@ -209,6 +216,153 @@ begin
             39,
             encode(6, 32, true, "01010101" & "10101010" & "11111111" & "00100010")'length
         );
+
+
+
+
+
+        -- ERROR INDEX (NOT EXTENDED)
+
+        data := "01101010";
+
+        run_test(
+            run, 
+            "get_error_index(syndrome(encode()))",
+            "Getting error index of decoded codeword without errors (not extended)",
+            15,
+            get_error_index(syndrome(4, false, encode(4, 8, false, data)), 15, false)
+        );
+
+        for i in 0 to 10 loop
+            code := encode(4, 8, false, data);
+            code := flip_bit(code, i);
+            run_test(
+                run, 
+                "get_error_index(syndrome(encode()))",
+                "Getting error index of decoded codeword with error on bit " & integer'image(i) & ". (not extended)",
+                i,
+                get_error_index(syndrome(4, false, code), 15, false)
+            );
+
+        end loop;
+
+
+        -- ERROR INDEX (EXTENDED)
+
+        data := "01101010";
+
+        run_test(
+            run, 
+            "get_error_index(syndrome(encode()))",
+            "Getting error index of decoded codeword without errors (extended)",
+            16,
+            get_error_index(syndrome(4, true, encode(4, 8, true, data)), 16, true)
+        );
+
+        for i in 0 to 11 loop
+            code_extended := encode(4, 8, true, data);
+            code_extended := flip_bit(code_extended, i);
+            run_test(
+                run, 
+                "get_error_index(syndrome(encode()))",
+                "Getting error index of decoded codeword with error on bit " & integer'image(i) & ". (extended)",
+                i,
+                get_error_index(syndrome(4, true, code_extended), 16, true)
+            );
+
+        end loop;
+
+        -- DATA ERROR INDEX (NOT EXTENDED)
+
+        data := "01101010";
+
+        run_test(
+            run, 
+            "get_data_error_index(syndrome(encode()))",
+            "Getting data error index of decoded codeword without errors (not extended)",
+            11,
+            get_data_error_index(syndrome(4, false, encode(4, 8, false, data)), 4, 11, false)
+        );
+
+        for i in 0 to 7 loop
+            code := encode(4, 8, false, data);
+            code := flip_bit(code, i + 4);
+            run_test(
+                run, 
+                "get_data_error_index(syndrome(encode()))",
+                "Getting data error index of decoded codeword with error on bit " & integer'image(i) & ". (not extended)",
+                i,
+                get_data_error_index(syndrome(4, false, code), 4, 11, false)
+            );
+
+        end loop;
+
+
+        -- DATA ERROR INDEX (EXTENDED)
+
+        data := "01101010";
+
+        run_test(
+            run, 
+            "get_data_error_index(syndrome(encode()))",
+            "Getting data error index of decoded codeword without errors (extended)",
+            11,
+            get_data_error_index(syndrome(4, true, encode(4, 8, true, data)), 4, 11, true)
+        );
+
+        for i in 0 to 7 loop
+            code_extended := encode(4, 8, true, data);
+            code_extended := flip_bit(code_extended, i + 5);
+            run_test(
+                run, 
+                "get_data_error_index(syndrome(encode()))",
+                "Getting data error index of decoded codeword with error on bit " & integer'image(i) & ". (extended)",
+                i,
+                get_data_error_index(syndrome(4, true, code_extended), 4, 11, true)
+            );
+
+        end loop;
+
+        -- ERROR MASK (EXTENDED)
+
+        data := "01101010";
+
+        run_test(
+            run, 
+            "get_error_mask(syndrome(encode()))",
+            "Getting error mask of decoded codeword without errors (extended)",
+            "00000000",
+            get_error_mask(syndrome(4, true, encode(4, 8, true, data)), 4, 11, true, 8)
+        );
+
+        for i in 0 to 4 loop
+            code_extended := encode(4, 8, true, data);
+            code_extended := flip_bit(code_extended, i);
+            run_test(
+                run, 
+                "get_error_mask(syndrome(encode()))",
+                "Getting error mask of decoded codeword with error on checkbit " & integer'image(i) & ". (extended)",
+                "00000000",
+                get_error_mask(syndrome(4, true, code_extended), 4, 11, true, 8)
+            );
+        end loop;
+
+
+        for i in 0 to 7 loop
+            code_extended := encode(4, 8, true, data);
+            code_extended := flip_bit(code_extended, i + 5);
+            run_test(
+                run, 
+                "get_error_mask(syndrome(encode()))",
+                "Getting error mask of decoded codeword with error on bit " & integer'image(i) & ". (extended)",
+                std_logic_vector(to_unsigned(2 ** i, 8)),
+                get_error_mask(syndrome(4, true, code_extended), 4, 11, true, 8)
+            );
+
+        end loop;
+
+        
+
         wait; 
     end process;
         

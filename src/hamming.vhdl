@@ -60,6 +60,7 @@ use std.textio.all;
 
 library work;
 use work.vectors.all;
+use work.spc.all;
 
 package hamming is
      -----------------------------
@@ -109,28 +110,44 @@ package hamming is
      function encode(gen_matrix: matrix; d: integer; data: std_logic_vector) return std_logic_vector;
      function encode(p: integer; d: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
 
-     -- function encode_chkbits(gen_matrix: matrix; data: std_logic_vector) return std_logic_vector;
-     -- function encode_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
-     -- function encode_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
+     function encode_chkbits(b_matrix: matrix; data: std_logic_vector) return std_logic_vector;
+     function encode_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
+     function encode_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
 
-     -- function syndrome(p_check_matrix: matrix; code: std_logic_vector) return std_logic_vector;
-     -- function syndrome(p: integer; e: boolean; code: std_logic_vector) return std_logic_vector;
-     -- function syndrome(hamming: hamming_t; code: std_logic_vector) return std_logic_vector;
+     function syndrome(p_check_matrix: matrix; code: std_logic_vector) return std_logic_vector;
+     function syndrome(p: integer; e: boolean; code: std_logic_vector) return std_logic_vector;
+     function syndrome(hamming: hamming_t; code: std_logic_vector) return std_logic_vector;
 
+     function get_num_errors(syndrome: std_logic_vector; e: boolean) return integer;
+     function get_num_errors(syndrome: std_logic_vector; h: hamming_t) return integer;
+     function single_bit_error(syndrome: std_logic_vector; e: boolean) return boolean;
+     function single_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean;
+     function double_bit_error(syndrome: std_logic_vector; e: boolean) return boolean;
+     function double_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean;
 
-     -- function get_num_errors(syndrome: std_logic_vector; e: boolean) return integer;
-     -- function get_num_errors(syndrome: std_logic_vector; h: hamming_t) return integer;
-     -- function single_bit_error(syndrome: std_logic_vector; e: boolean) return boolean;
-     -- function single_bit_error(syndrome: std_logic_vector; e: hamming_t) return boolean;
-     -- function double_bit_error(syndrome: std_logic_vector; e: boolean) return boolean;
-     -- function double_bit_error(syndrome: std_logic_vector; e: hamming_t) return boolean;
+     -- c: MAXIMUM code length
+     -- e: extended
+     -- returns integer of error assuming code is (c - 1 downto 0) and checkbits are appended on LSB side
+     -- returns c if there is no error
+     function get_error_index(syndrome: std_logic_vector; c: integer; e: boolean) return integer;
+     function get_error_index(syndrome: std_logic_vector; h: hamming_t) return integer;
 
-     -- function get_error_index(syndrome: std_logic_vector; e: boolean) return integer;
-     -- function get_error_index(syndrome: std_logic_vector; h: hamming_t) return integer;
+     -- p: parity bits (without extended bit)
+     -- d: MAXIMUM data bits 
+     -- e: extended
+     -- returns integer of error in data vector assuming code is (high - 1 downto 0) and checkbits are appended on LSB side
+     -- returns d if there is no error in data
+     function get_data_error_index(syndrome: std_logic_vector; p: integer; d: integer; e: boolean) return integer;
+     function get_data_error_index(syndrome: std_logic_vector; h: hamming_t) return integer;
 
-     -- function get_error_mask(index: integer; d: integer) return std_logic_vector;
-     -- function get_error_mask(syndrome: std_logic_vector; e: boolean; d: integer) return std_logic_vector;
-     -- function get_error_mask(syndrome: std_logic_vector; e: boolean; h: hamming_t) return std_logic_vector;
+     -- index: DATA error index
+     -- d: ACTUAL data bits
+     -- dm: MAXIMUM data bits
+     -- p: parity bits (without extended bit)
+     -- e: extended
+     function get_error_mask(index: integer; d: integer) return std_logic_vector;
+     function get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector;
+     function get_error_mask(syndrome: std_logic_vector; h: hamming_t) return std_logic_vector;
 
 end hamming;
 
@@ -598,5 +615,244 @@ package body hamming is
           return encode(generator_matrix(p, e), d, data);
      end function encode;
 
+
+     function encode_chkbits(b_matrix: matrix; data: std_logic_vector) return std_logic_vector is
+          variable data_bits : integer := b_matrix'length(1);
+          variable data_bits_available : integer := data'length;
+          variable data_in_std : vector(data_bits_available - 1 downto 0) := to_vector(data);
+          variable data_std  : vector(data_bits - 1 downto 0) := (others => '0');
+     begin 
+          if data_bits_available > data_bits then
+               assert false 
+                    report "Data vector too long for this generating matrix. Cropping to " & integer'image(data_bits) & " bits."
+                    severity note;
+               data_bits_available := data_bits;
+          end if;
+          
+          data_std(data_bits_available - 1 downto 0) := data_in_std(data_bits_available - 1 downto 0);
+          return to_logic_vector(data_std * b_matrix);
+     end function;
+          
+     function encode_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector is 
+     begin 
+          return encode_chkbits(base_matrix(p, e), data);
+     end function;
+
+     function encode_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector is 
+     begin 
+          return encode_chkbits(base_matrix(hamming), data);
+     end function;
+
+     function syndrome(p_check_matrix: matrix; code: std_logic_vector) return std_logic_vector is 
+          variable code_bits : integer := p_check_matrix'length(2);
+          variable code_bits_available : integer := code'length;
+          variable code_in_std : vector(code'length - 1 downto 0) := to_vector(code);
+          variable code_std : vector(code_bits - 1 downto 0) := (others => '0');
+     begin 
+          if code_bits_available > code_bits then
+               assert false 
+                    report "Data vector too long for this parity check matrix. Cropping to " & integer'image(code_bits) & " bits."
+                    severity note;
+               code_bits_available := code_bits;
+          end if;
+          code_std(code_bits_available - 1 downto 0) := code_in_std(code_bits_available - 1  downto 0);
+          
+          return to_logic_vector(code_std * transpose(p_check_matrix));
+     end function;
+
+     function syndrome(p: integer; e: boolean; code: std_logic_vector) return std_logic_vector is 
+     begin 
+          return syndrome(parity_check_matrix(p, e), code);
+     end function;
+
+     function syndrome(hamming: hamming_t; code: std_logic_vector) return std_logic_vector is 
+     begin 
+          return syndrome(parity_check_matrix(hamming), code);
+     end function;
+
+
+     function get_num_errors(syndrome: std_logic_vector; e: boolean) return integer is 
+          variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
+          variable syndrome_zero: std_logic_vector(syndrome'length - 1 downto 0) := (others => '0');
+     begin 
+          if e then 
+               if check_parity(syndrome, EVEN) then 
+                    if syndrome_std = syndrome_zero then
+                         return 0;
+                    else 
+                         return 2;
+                    end if;
+               else 
+                    return 1;
+               end if;
+          else 
+               if syndrome_std = syndrome_zero then
+                    return 0;
+               else 
+                    return 1;
+               end if;
+          end if;
+
+     end function;
+
+     function get_num_errors(syndrome: std_logic_vector; h: hamming_t) return integer is 
+     begin 
+          return get_num_errors(syndrome, h.extended);
+     end function;
+
+     function single_bit_error(syndrome: std_logic_vector; e: boolean) return boolean is 
+          variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
+          variable syndrome_zero: std_logic_vector(syndrome'length - 1 downto 0) := (others => '0');
+     begin 
+          if e then 
+               if check_parity(syndrome, EVEN) then 
+                    return false;
+               else 
+                    return true;
+               end if;
+          else 
+               if syndrome_std = syndrome_zero then
+                    return false;
+               else 
+                    return true;
+               end if;
+          end if;
+     end function;
+
+     function single_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean is 
+     begin 
+          return single_bit_error(syndrome, h.extended);
+     end function;
+
+     function double_bit_error(syndrome: std_logic_vector; e: boolean) return boolean is 
+          variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
+          variable syndrome_zero: std_logic_vector(syndrome'length - 1 downto 0) := (others => '0');
+     begin 
+          if e then
+               if check_parity(syndrome, EVEN) then 
+                    if syndrome_std = syndrome_zero then
+                         return false;
+                    else 
+                         return true;
+                    end if;
+               else 
+                    return false;
+               end if;
+          else 
+               return false;
+          end if;
+     end function;
+
+     function double_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean is 
+     begin 
+          return double_bit_error(syndrome, h.extended);
+     end function;
+
+     function get_error_index(syndrome: std_logic_vector; c: integer; e: boolean) return integer is
+          variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
+          variable syndrome_pure_std: std_logic_vector(syndrome'length - 2 downto 0) := syndrome_std(syndrome_std'length - 1 downto 1);
+          variable syndrome_full_int: integer := to_integer(unsigned(syndrome_std));
+          variable syndrome_int: integer;
+          variable power: integer := 0;
+     begin 
+          if e then
+               syndrome_int := to_integer(unsigned(syndrome_pure_std));
+          else 
+               syndrome_int := to_integer(unsigned(syndrome_std));
+          end if;
+
+          -- find smallest power of 2 larger than syndrome
+          while 2 ** power < syndrome_int loop
+               power := power + 1;
+          end loop;
+
+          -- if syndrome is a power of two, error is in a check bit
+          -- so 2 ** error_index = syndrome
+          -- else reverse index and subtract number of powers of two
+          if 2 ** power = syndrome_int then
+               if e then 
+                    return power + 1;
+               else 
+                    return power;
+               end if;
+          else 
+               if e then
+                    if syndrome_int = 0 then
+                         if syndrome_full_int = 0 then
+                              return c;
+                         else 
+                              return 0;
+                         end if;
+                    else 
+                         return c - syndrome_int + power;
+                    end if;
+               else 
+                    return c - syndrome_int + power;
+               end if;
+          end if;
+     end function;
+
+     function get_error_index(syndrome: std_logic_vector; h: hamming_t) return integer is 
+     begin 
+          return get_error_index(syndrome, h.max_total_bits, h.extended);
+     end function;
+
+
+     function get_data_error_index(syndrome: std_logic_vector; p: integer; d: integer; e: boolean) return integer is
+          variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
+          variable syndrome_pure_std: std_logic_vector(syndrome'length - 2 downto 0) := syndrome_std(syndrome_std'length - 1 downto 1);
+          variable syndrome_full_int: integer := to_integer(unsigned(syndrome_std));
+          variable syndrome_int: integer;
+          variable power: integer := 0;
+          variable max_power: integer := 0;
+     begin 
+          
+          if e then
+               syndrome_int := to_integer(unsigned(syndrome_pure_std));
+          else 
+               syndrome_int := to_integer(unsigned(syndrome_std));
+          end if;
+         
+          -- find smallest power of 2 larger than syndrome
+          while 2 ** power < syndrome_int loop
+               power := power + 1;
+          end loop;
+
+          -- find smallers power of 2 larger than data bits
+          while 2 ** max_power < d loop
+               max_power := max_power + 1;
+          end loop;
+
+          -- if syndrome is a power of two, error is in a check bit, return d
+          -- if syndrome is 0, there is no error, return d
+          -- else reverse index, add powers of two, subtract max powers of two
+          if 2 ** power = syndrome_int then
+               return d;
+          elsif syndrome_int = 0 then
+               return d;
+          else 
+               return d + p - syndrome_int + power - max_power;
+          end if;
+     end function;
+
+     function get_data_error_index(syndrome: std_logic_vector; h: hamming_t) return integer is 
+     begin 
+          return get_data_error_index(syndrome, h.parity_bits, h.max_data_bits, h.extended);
+     end function;
+     
+     function get_error_mask(index: integer; d: integer) return std_logic_vector is
+     begin 
+          return std_logic_vector(to_unsigned(2 ** index, d));
+     end function;
+
+     function get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector is
+     begin 
+          return get_error_mask(get_data_error_index(syndrome, p, dm, e), d);
+     end function;
+
+     function get_error_mask(syndrome: std_logic_vector; h: hamming_t) return std_logic_vector is
+     begin 
+          return get_error_mask(get_data_error_index(syndrome, h), h.data_bits);
+     end function;
 
 end package body;

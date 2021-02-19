@@ -55,6 +55,8 @@ library work;
 use work.vectors.all;
 
 package spc is
+    type parity_t is (EVEN, ODD);
+
     function spc_encode(data: vector) return vector;
     function spc_encode(data: std_logic_vector) return std_logic_vector;
 
@@ -75,9 +77,19 @@ package spc is
     -- simpler api
     function parity(data: vector) return std_logic;
     function parity(data: std_logic_vector) return std_logic;
+    function parity(data: vector; t: parity_t) return std_logic;
+    function parity(data: std_logic_vector; t: parity_t) return std_logic;
 
     function add_parity_bit(data: vector) return vector;
     function add_parity_bit(data: std_logic_vector) return std_logic_vector;
+    function add_parity_bit(data: vector; t: parity_t) return vector;
+    function add_parity_bit(data: std_logic_vector; t: parity_t) return std_logic_vector;
+
+    function check_parity(data: vector) return boolean;
+    function check_parity(data: std_logic_vector) return boolean;
+    function check_parity(data: vector; t: parity_t) return boolean;
+    function check_parity(data: std_logic_vector; t: parity_t) return boolean;
+
 end package spc;
 
 library ieee;
@@ -160,24 +172,78 @@ package body spc is
     end function;
 
 
+
+
     function parity(data: vector) return std_logic is
     begin 
-        return data * ones(data'length);
+        return parity(data, EVEN);
     end function;
 
     function parity(data: std_logic_vector) return std_logic is 
     begin
-        return to_vector(data) * ones(data'length);
+        return parity(data, EVEN);
     end function;
+
+
+    function parity(data: vector; t: parity_t) return std_logic is 
+    begin 
+        if t = EVEN then
+            return data * ones(data'length);
+        else 
+            return not (data * ones(data'length));
+        end if;
+    end function;
+
+    function parity(data: std_logic_vector; t: parity_t) return std_logic is 
+    begin 
+        return parity(to_vector(data), t);
+    end function;
+
 
     function add_parity_bit(data: vector) return vector is 
     begin 
-        return spc_encode(data);
+        return add_parity_bit(data, EVEN);
     end function;
 
     function add_parity_bit(data: std_logic_vector) return std_logic_vector is
     begin 
-        return spc_encode(data);
+        return add_parity_bit(data, EVEN);
     end function;
+
+
+    function add_parity_bit(data: vector; t: parity_t) return vector is 
+    begin 
+        return data & parity(data, t);
+    end function;
+
+    function add_parity_bit(data: std_logic_vector; t: parity_t) return std_logic_vector is 
+    begin 
+        return to_logic_vector(add_parity_bit(to_vector(data), t));
+    end function;
+
+    function check_parity(data: vector) return boolean is 
+    begin 
+        return check_parity(data, EVEN);
+    end function;
+    
+    function check_parity(data: std_logic_vector) return boolean is 
+    begin 
+        return check_parity(data, EVEN);
+    end function;
+
+    function check_parity(data: vector; t: parity_t) return boolean is 
+    begin 
+        if t = EVEN then 
+            return data * ones(data'length) = '0';
+        else 
+            return data * ones(data'length) = '1';
+        end if;
+    end function;
+
+    function check_parity(data: std_logic_vector; t: parity_t) return boolean is 
+    begin 
+        return check_parity(to_vector(data), t);
+    end function;
+
 
 end package body spc;

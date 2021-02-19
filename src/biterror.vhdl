@@ -58,30 +58,30 @@ package biterror is
     function flip_bit(v: std_logic_vector; b: integer) return std_logic_vector;
 
     function flip_bit(v: vector; b: intvec_t) return vector;
-    function flip_bit(v: std_logic_vector; b: intvec_t) return vector;
+    function flip_bit(v: std_logic_vector; b: intvec_t) return std_logic_vector;
 end package biterror;
 
-package body biterror;
+package body biterror is 
     function flip_bit(v: vector; b: integer) return vector is 
         variable v_std: vector(v'length - 1 downto 0) := v;
     begin 
         if b > v'length - 1 or b < 0 then
             assert false
                 report "Bit index out of range. No bits are flipped."
-                severity info;
+                severity note;
         else 
             v_std(b) := not v_std(b);
         end if;
         return v_std;
     end function;
 
-    function flip_bit(v: std_logic_vector; b: integer) return std_logic_vector;
+    function flip_bit(v: std_logic_vector; b: integer) return std_logic_vector is
     begin 
         return to_logic_vector(flip_bit(to_vector(v), b));
     end function;
 
     function flip_bit(v: vector; b: intvec_t) return vector is
-        variable v_std(v'length - 1 downto 0) := v;
+        variable v_std: vector(v'length - 1 downto 0) := v;
     begin 
         for i in b'range loop
             v_std := flip_bit(v_std, b(i));
@@ -89,7 +89,7 @@ package body biterror;
         return v_std;
     end function;
 
-    function flip_bit(v: std_logic_vector; b: intvec_t) return vector is 
+    function flip_bit(v: std_logic_vector; b: intvec_t) return std_logic_vector is 
     begin 
         return to_logic_vector(flip_bit(to_vector(v), b));
     end function;
