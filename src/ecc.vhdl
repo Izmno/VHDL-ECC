@@ -63,16 +63,16 @@ package ecc_pkg is
     component ecc is 
         generic (
             -- number of data bits
-            generic g_data_bits: integer := 32;
+            g_data_bits: integer := 32;
 
             -- should always be hamming.calc_parity_bits(g_data_bits)
-            generic g_parity_bits: integer := 5;
+            g_parity_bits: integer := 5;
             
             -- should always be g_parity_bits + 1 if g_extended else g_parity_bits
-            generic g_total_parity_bits: integer := 6;
+            g_total_parity_bits: integer := 6;
             
             -- whether to use extended hamming codes
-            generic g_extended: boolean := true
+            g_extended: boolean := true
         );
         port (
             encode       : in std_logic;
@@ -107,16 +107,16 @@ use work.ecc_pkg.all;
 entity ecc is 
     generic (
         -- number of data bits
-        generic g_data_bits: integer := 32;
+        g_data_bits: integer := 32;
 
         -- should always be hamming.calc_parity_bits(g_data_bits)
-        generic g_parity_bits: integer := 5;
+        g_parity_bits: integer := 6;
         
         -- should always be g_parity_bits + 1 if g_extended else g_parity_bits
-        generic g_total_parity_bits: integer := 6;
+        g_total_parity_bits: integer := 7;
         
         -- whether to use extended hamming codes
-        generic g_extended: boolean := true
+        g_extended: boolean := true
     );
     port (
         encode       : in std_logic;
@@ -134,22 +134,26 @@ end entity ecc;
 
 architecture behaviour of ecc is
     -- hamming properties 
-    constant hamming: hamming_t := init_hamming(g_data_bits, g_extended)
+    constant hamming: hamming_t := init_hamming(g_data_bits, g_extended);
 
     -- decoding signals
     signal mask: std_logic_vector(g_data_bits - 1 downto 0);
-    signal syndrome: std_logic_vector(g_total_parity_bits - 1 downto 0);
+    signal syndrome_i: std_logic_vector(g_total_parity_bits - 1 downto 0);
+    signal code: std_logic_vector(g_total_parity_bits + g_data_bits - 1 downto 0);
     signal se_i: boolean;
     signal de_i: boolean;
     signal co_i: boolean;
     
 begin 
     -- assign decoding signals
-    syndrome <= syndrome(data_in & chkbits_in, hamming);
-    mask     <= get_error_mask(syndrome, hamming);
-    se_i     <= single_bit_error(syndrome, hamming);
-    de_i     <= double_bit_error(syndrome, hamming);
-    co_i     <= not encode and correct and (not de_i); 
+    code(code'left downto g_total_parity_bits) <= data_in;
+    code(g_total_parity_bits - 1 downto 0) <= chkbits_in;
+
+    syndrome_i <= syndrome(g_parity_bits, g_extended, code);
+    mask       <= get_error_mask(syndrome_i, hamming);
+    se_i       <= single_bit_error(syndrome_i, hamming);
+    de_i       <= double_bit_error(syndrome_i, hamming);
+    co_i       <= not encode = '1' and correct = '1' and (not de_i); 
 
     -- outputs
     data_out     <= data_in xor mask when co_i else data_in;

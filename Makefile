@@ -7,6 +7,7 @@ TARGET  		:= $(WORKDIR)/work-obj93.cf
 SIM_ENTITIES	:= vectors_tb 
 SIM_ENTITIES    += hamming_tb
 SIM_ENTITIES    += spc_tb
+SIM_ENTITIES    += ecc_tb
 
 TOPLEVEL 		:= pkg_matrix_tb
 

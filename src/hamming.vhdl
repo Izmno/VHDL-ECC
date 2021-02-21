@@ -841,8 +841,12 @@ package body hamming is
      end function;
      
      function get_error_mask(index: integer; d: integer) return std_logic_vector is
+          variable m: std_logic_vector(d - 1 downto 0) := (others => '0');
      begin 
-          return std_logic_vector(to_unsigned(2 ** index, d));
+          if index < d and index > 0 then
+               m(index) := '1';
+          end if;
+          return m;
      end function;
 
      function get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector is
