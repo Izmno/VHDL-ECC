@@ -46,8 +46,6 @@
 -- Additional Comments:
 --
 -- Known bugs/limitations:
---   encode overloads which specify number of data bits on output
---   do not work as intended
 -- 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -145,9 +143,17 @@ package hamming is
      -- dm: MAXIMUM data bits
      -- p: parity bits (without extended bit)
      -- e: extended
-     function get_error_mask(index: integer; d: integer) return std_logic_vector;
      function get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector;
      function get_error_mask(syndrome: std_logic_vector; h: hamming_t) return std_logic_vector;
+
+     -- maps index of datastring (1 indexed) to index in the hamming code (1 indexed)
+     function calc_dbit_index(i: integer) return integer;
+
+     -- maps index of checkstring (1 indexed) to index in the hamming code (1 indexed)
+     -- for i >= 1 return 2 ** (i - 1)
+     function calc_pbit_index(i: integer) return integer;
+
+
 
 end hamming;
 
@@ -751,9 +757,9 @@ package body hamming is
      function get_error_index(syndrome: std_logic_vector; c: integer; e: boolean) return integer is
           variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
           variable syndrome_pure_std: std_logic_vector(syndrome'length - 2 downto 0) := syndrome_std(syndrome_std'length - 1 downto 1);
-          variable syndrome_full_int: integer := to_integer(unsigned(syndrome_std));
-          variable syndrome_int: integer;
-          variable power: integer := 0;
+          variable syndrome_full_int: natural := to_integer(unsigned(syndrome_std));
+          variable syndrome_int: natural;
+          variable power: natural := 0;
      begin 
           if e then
                syndrome_int := to_integer(unsigned(syndrome_pure_std));
@@ -762,9 +768,12 @@ package body hamming is
           end if;
 
           -- find smallest power of 2 larger than syndrome
-          while 2 ** power < syndrome_int loop
-               power := power + 1;
-          end loop;
+          -- the constraint on maximum value of power is there so the code is synthesizable
+          if (2 ** power < syndrome_int) then
+               while (2 ** power < syndrome_int) and (power < syndrome'length + 2) loop
+                    power := power + 1;
+               end loop;
+          end if;
 
           -- if syndrome is a power of two, error is in a check bit
           -- so 2 ** error_index = syndrome
@@ -800,38 +809,35 @@ package body hamming is
 
      function get_data_error_index(syndrome: std_logic_vector; p: integer; d: integer; e: boolean) return integer is
           variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
-          variable syndrome_pure_std: std_logic_vector(syndrome'length - 2 downto 0) := syndrome_std(syndrome_std'length - 1 downto 1);
-          variable syndrome_full_int: integer := to_integer(unsigned(syndrome_std));
-          variable syndrome_int: integer;
-          variable power: integer := 0;
-          variable max_power: integer := 0;
+          variable syndrome_int: natural;
+          variable power: natural := 0;
+          variable max_power: natural := 0;
      begin 
           
           if e then
-               syndrome_int := to_integer(unsigned(syndrome_pure_std));
-          else 
-               syndrome_int := to_integer(unsigned(syndrome_std));
+               syndrome_std := '0' & syndrome_std(syndrome_std'length - 1 downto 1);
           end if;
-         
-          -- find smallest power of 2 larger than syndrome
-          while 2 ** power < syndrome_int loop
-               power := power + 1;
-          end loop;
 
-          -- find smallers power of 2 larger than data bits
-          while 2 ** max_power < d loop
-               max_power := max_power + 1;
-          end loop;
+          syndrome_int := to_integer(unsigned(syndrome_std));
+         
+
+          -- find smallest power of 2 larger than syndrome
+          -- the constraint on maximum value of power is there so the code is synthesizable
+          if (2 ** power < syndrome_int) then
+               while (2 ** power < syndrome_int) and (power < syndrome'length + 2) loop
+                    power := power + 1;
+               end loop;
+          end if;
 
           -- if syndrome is a power of two, error is in a check bit, return d
           -- if syndrome is 0, there is no error, return d
-          -- else reverse index, add powers of two, subtract max powers of two
+          -- else reverse index, add powers of two
           if 2 ** power = syndrome_int then
                return d;
           elsif syndrome_int = 0 then
                return d;
           else 
-               return d + p - syndrome_int + power - max_power;
+               return d - syndrome_int + power;
           end if;
      end function;
 
@@ -839,24 +845,79 @@ package body hamming is
      begin 
           return get_data_error_index(syndrome, h.parity_bits, h.max_data_bits, h.extended);
      end function;
-     
-     function get_error_mask(index: integer; d: integer) return std_logic_vector is
-          variable m: std_logic_vector(d - 1 downto 0) := (others => '0');
-     begin 
-          if index < d and index > 0 then
-               m(index) := '1';
-          end if;
-          return m;
-     end function;
 
      function get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector is
+          variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
+          variable syndrome_int: integer;
+          variable mask: std_logic_vector(dm + p + 1 downto 1) := (others => '0');
+          variable len: integer;
+          variable datbits: std_logic_vector(1 to dm);
+          variable outmask: std_logic_vector(d - 1 downto 0) := (others => '0');
+          variable idx: integer;
      begin 
-          return get_error_mask(get_data_error_index(syndrome, p, dm, e), d);
+          if e then
+               syndrome_std := '0' & syndrome_std(syndrome_std'left downto 1);
+          end if;
+          syndrome_int := to_integer(unsigned(syndrome_std));
+
+          if syndrome_int <= mask'length and syndrome_int >= 1 then
+               mask(syndrome_int) := '1';
+          end if;
+
+          for i in datbits'range loop
+               idx := calc_dbit_index(i);
+               if (idx > mask'length) or (idx < 1) then
+                    datbits(i) := '0';
+               else 
+                    datbits(i) := mask(idx);
+               end if;
+          end loop;
+
+          if d > dm then
+               len := dm;
+          else
+               len := d;
+          end if;
+
+          outmask(len - 1 downto 0) := datbits(1 + dm - len to dm);
+          return outmask;
      end function;
 
      function get_error_mask(syndrome: std_logic_vector; h: hamming_t) return std_logic_vector is
      begin 
-          return get_error_mask(get_data_error_index(syndrome, h), h.data_bits);
+          return get_error_mask(syndrome, h.parity_bits, h.max_data_bits, h.extended, h.data_bits);
+     end function;
+
+     -- maps index of datastring (1 indexed) to index in the hamming code (1 indexed)
+     function calc_dbit_index(i: integer) return integer is 
+          variable idx: integer := 1;
+          variable p: integer := 2;
+     begin 
+          if i < 1 then
+               return 3;
+          else 
+               for j in 1 to i loop
+                    idx := idx + 1;
+                    if p < idx then
+                         p := p * 2;
+                    end if;
+                    if p = idx then 
+                         idx := idx + 1;
+                    end if;
+               end loop;
+               return idx;
+          end if;
+     end function;
+
+     -- maps index of checkstring (1 indexed) to index in the hamming code (1 indexed)
+     -- for i >= 1 return 2 ** (i - 1)
+     function calc_pbit_index(i: integer) return integer is
+     begin 
+          if i < 1 then
+               return 1;
+          else 
+               return 2 ** (i - 1);
+          end if;
      end function;
 
 end package body;

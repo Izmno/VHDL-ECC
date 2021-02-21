@@ -511,7 +511,7 @@ package body vectors is
                 m_std(i, j) := a_std(i) * b_std(j);
             end loop;
         end loop;
-        return m;
+        return m_std;
     end function;
 
 

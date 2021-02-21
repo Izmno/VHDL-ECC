@@ -136,3 +136,4 @@ begin
     single_error <= '1' when se_i else '0';
     double_error <= '1' when de_i else '0';
 end architecture;
+
