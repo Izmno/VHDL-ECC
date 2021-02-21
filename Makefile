@@ -75,3 +75,11 @@ $(WORKDIR):
 $(OUTDIR):
 	@mkdir $(OUTDIR)
 
+
+synth: clean_synth
+	vivado -mode batch -source synth.tcl
+
+clean_synth:
+	rm -rf .Xil
+	rm -rf synth
+
