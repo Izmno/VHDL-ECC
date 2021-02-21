@@ -511,6 +511,7 @@ package body vectors is
                 m_std(i, j) := a_std(i) * b_std(j);
             end loop;
         end loop;
+        return m;
     end function;
 
 
@@ -1132,6 +1133,7 @@ package body vectors is
         variable bfr: line;
     begin 
         write(bfr, string'("(" & integer'image(a(1)) & "," & integer'image(a(2)) & ")"));
+        return bfr.all;
     end function to_string;
 
     function to_string(a: std_logic_vector) return string is 

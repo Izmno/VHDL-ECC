@@ -277,7 +277,7 @@ package body hamming is
           variable length: integer := calc_data_bits(limit);
           variable power: integer := 1;
           variable vec: intvec_t(length - 1 downto 0);
-          variable idx: integer := vec'range'left;
+          variable idx: integer := length - 1;
      begin
           -- Limits lower than 2 are not allowed. 
           -- This would result in an empty list. Cannot be bothered
