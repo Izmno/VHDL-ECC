@@ -78,8 +78,11 @@ $(OUTDIR):
 
 synth: clean_synth
 	vivado -mode batch -source synth.tcl
+	rm -f vivado*.*
+	rm -rf .Xil
 
 clean_synth:
 	rm -rf .Xil
 	rm -rf synth
+	rm -f vivado*.*
 

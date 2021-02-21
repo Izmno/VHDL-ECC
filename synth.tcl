@@ -1,10 +1,11 @@
-create_project synth/ecc 
+create_project synth/ecc -part xc7k70tfbv676-1
 
 # set the correct working directory
 # https://www.xilinx.com/support/answers/55743.html
 cd [get_property DIRECTORY [current_project]]
 
 add_files -norecurse { \
+    ../src/components/mask_generator.vhdl
     ../src/ecc.vhdl \
     ../src/ecc_tb.vhdl \
     ../src/unittest.vhdl \
@@ -17,7 +18,7 @@ add_files -norecurse { \
 }
 
 
-set_property top ecc [current_fileset]
+set_property top mask_generator [current_fileset]
 update_compile_order -fileset sources_1
 
 launch_runs synth_1 -jobs 2
