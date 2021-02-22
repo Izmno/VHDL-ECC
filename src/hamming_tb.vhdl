@@ -122,99 +122,99 @@ begin
 
         run_test(
             run,
-            "base_matrix(integer, boolean)",
+            "hamming_base_matrix(integer, boolean)",
             "",
             matrix'("011", "101", "110", "111"),
-            base_matrix(3, false)
+            hamming_base_matrix(3, false)
         );
 
         run_test(
             run,
-            "base_matrix(integer, boolean)",
+            "hamming_base_matrix(integer, boolean)",
             "",
             matrix'("0111", "1011", "1101", "1110"),
-            base_matrix(3, true)
+            hamming_base_matrix(3, true)
         );
 
         run_test(
             run, 
-            "generator_matrix(integer, boolean)",
+            "hamming_generator_matrix(integer, boolean)",
             "",
             matrix'("1000011", "0100101", "0010110", "0001111"),
-            generator_matrix(3, false)
+            hamming_generator_matrix(3, false)
         );
 
         run_test(
             run, 
-            "generator_matrix(integer, boolean)",
+            "hamming_generator_matrix(integer, boolean)",
             "",
             matrix'("10000111", "01001011", "00101101", "00011110"),
-            generator_matrix(3, true)
+            hamming_generator_matrix(3, true)
         );
 
         run_test(
             run, 
-            "parity_check_matrix(integer, boolean)",
+            "hamming_parity_check_matrix(integer, boolean)",
             "",
             ("0111100", "1011010", "1101001"),
-            parity_check_matrix(3, false)
+            hamming_parity_check_matrix(3, false)
         );
 
         run_test(
             run, 
-            "parity_check_matrix(integer, boolean)",
+            "hamming_parity_check_matrix(integer, boolean)",
             "",
             ("01111000", "10110100", "11010010", "11100001"),
-            parity_check_matrix(3, true)
+            hamming_parity_check_matrix(3, true)
         );
 
         run_test(
             run, 
-            "encode(integer, boolean, std_logic_vector)",
+            "hamming_encode(integer, boolean, std_logic_vector)",
             "Encoding a 4 bit string without extra parity bit",
             "1011010",
-            encode(3, false, "1011")
+            hamming_encode(3, false, "1011")
         );
 
         run_test(
             run, 
-            "encode(integer, boolean, std_logic_vector)",
+            "hamming_encode(integer, boolean, std_logic_vector)",
             "Encoding a 4 bit string with extra parity bit",
             "10110100",
-            encode(3, true, "1011")
+            hamming_encode(3, true, "1011")
         );
         
         run_test(
             run, 
-            "encode(integer, boolean, std_logic_vector)",
+            "hamming_encode(integer, boolean, std_logic_vector)",
             "Encoding a 4 bit string with too many parity bits according to spec",
             "0000000000000000000000101111101",
-            encode(5, false, "1011")
+            hamming_encode(5, false, "1011")
         );
 
         run_test(
             run, 
-            "encode(integer, boolean, std_logic_vector)",
+            "hamming_encode(integer, boolean, std_logic_vector)",
             "Encoding a 9 bit string with too little parity bits according to spec",
             "0010110",
-            encode(3, false, "010010010")
+            hamming_encode(3, false, "010010010")
         );
 
 
         run_test(
             run, 
-            "encode(integer, integer, boolean, std_logic_vector)",
+            "hamming_encode(integer, integer, boolean, std_logic_vector)",
             "Encoding a 32 bit string with with extended hamming code",
             "010101011010101011111111001000100001001",
-            encode(6, 32, true, "01010101" & "10101010" & "11111111" & "00100010")
+            hamming_encode(6, 32, true, "01010101" & "10101010" & "11111111" & "00100010")
         );
 
         run_test(
             run, 
-            "encode(integer, integer, boolean, std_logic_vector)'length",
+            "hamming_encode(integer, integer, boolean, std_logic_vector)'length",
             "Checking length of output vector in previous example",
             39,
-            encode(6, 32, true, "01010101" & "10101010" & "11111111" & "00100010")'length
+            hamming_encode(6, 32, true, "01010101" & "10101010" & "11111111" & "00100010")'length
         );
 
 
@@ -227,21 +227,21 @@ begin
 
         run_test(
             run, 
-            "get_error_index(syndrome(encode()))",
+            "hamming_get_error_index(hamming_syndrome(hamming_encode()))",
             "Getting error index of decoded codeword without errors (not extended)",
             15,
-            get_error_index(syndrome(4, false, encode(4, 8, false, data)), 15, false)
+            hamming_get_error_index(hamming_syndrome(4, false, hamming_encode(4, 8, false, data)), 15, false)
         );
 
         for i in 0 to 10 loop
-            code := encode(4, 8, false, data);
+            code := hamming_encode(4, 8, false, data);
             code := flip_bit(code, i);
             run_test(
                 run, 
-                "get_error_index(syndrome(encode()))",
+                "hamming_get_error_index(hamming_syndrome(hamming_encode()))",
                 "Getting error index of decoded codeword with error on bit " & integer'image(i) & ". (not extended)",
                 i,
-                get_error_index(syndrome(4, false, code), 15, false)
+                hamming_get_error_index(hamming_syndrome(4, false, code), 15, false)
             );
 
         end loop;
@@ -253,21 +253,21 @@ begin
 
         run_test(
             run, 
-            "get_error_index(syndrome(encode()))",
+            "hamming_get_error_index(hamming_syndrome(hamming_encode()))",
             "Getting error index of decoded codeword without errors (extended)",
             16,
-            get_error_index(syndrome(4, true, encode(4, 8, true, data)), 16, true)
+            hamming_get_error_index(hamming_syndrome(4, true, hamming_encode(4, 8, true, data)), 16, true)
         );
 
         for i in 0 to 11 loop
-            code_extended := encode(4, 8, true, data);
+            code_extended := hamming_encode(4, 8, true, data);
             code_extended := flip_bit(code_extended, i);
             run_test(
                 run, 
-                "get_error_index(syndrome(encode()))",
+                "hamming_get_error_index(hamming_syndrome(hamming_encode()))",
                 "Getting error index of decoded codeword with error on bit " & integer'image(i) & ". (extended)",
                 i,
-                get_error_index(syndrome(4, true, code_extended), 16, true)
+                hamming_get_error_index(hamming_syndrome(4, true, code_extended), 16, true)
             );
 
         end loop;
@@ -278,21 +278,21 @@ begin
 
         run_test(
             run, 
-            "get_data_error_index(syndrome(encode()))",
+            "hamming_get_data_error_index(hamming_syndrome(hamming_encode()))",
             "Getting data error index of decoded codeword without errors (not extended)",
             11,
-            get_data_error_index(syndrome(4, false, encode(4, 8, false, data)), 4, 11, false)
+            hamming_get_data_error_index(hamming_syndrome(4, false, hamming_encode(4, 8, false, data)), 4, 11, false)
         );
 
         for i in 0 to 7 loop
-            code := encode(4, 8, false, data);
+            code := hamming_encode(4, 8, false, data);
             code := flip_bit(code, i + 4);
             run_test(
                 run, 
-                "get_data_error_index(syndrome(encode()))",
+                "hamming_get_data_error_index(hamming_syndrome(hamming_encode()))",
                 "Getting data error index of decoded codeword with error on bit " & integer'image(i) & ". (not extended)",
                 i,
-                get_data_error_index(syndrome(4, false, code), 4, 11, false)
+                hamming_get_data_error_index(hamming_syndrome(4, false, code), 4, 11, false)
             );
 
         end loop;
@@ -304,21 +304,21 @@ begin
 
         run_test(
             run, 
-            "get_data_error_index(syndrome(encode()))",
+            "hamming_get_data_error_index(hamming_syndrome(hamming_encode()))",
             "Getting data error index of decoded codeword without errors (extended)",
             11,
-            get_data_error_index(syndrome(4, true, encode(4, 8, true, data)), 4, 11, true)
+            hamming_get_data_error_index(hamming_syndrome(4, true, hamming_encode(4, 8, true, data)), 4, 11, true)
         );
 
         for i in 0 to 7 loop
-            code_extended := encode(4, 8, true, data);
+            code_extended := hamming_encode(4, 8, true, data);
             code_extended := flip_bit(code_extended, i + 5);
             run_test(
                 run, 
-                "get_data_error_index(syndrome(encode()))",
+                "hamming_get_data_error_index(hamming_syndrome(hamming_encode()))",
                 "Getting data error index of decoded codeword with error on bit " & integer'image(i) & ". (extended)",
                 i,
-                get_data_error_index(syndrome(4, true, code_extended), 4, 11, true)
+                hamming_get_data_error_index(hamming_syndrome(4, true, code_extended), 4, 11, true)
             );
 
         end loop;
@@ -329,34 +329,34 @@ begin
 
         run_test(
             run, 
-            "get_error_mask(syndrome(encode()))",
+            "hamming_get_error_mask(hamming_syndrome(hamming_encode()))",
             "Getting error mask of decoded codeword without errors (extended)",
             "00000000",
-            get_error_mask(syndrome(4, true, encode(4, 8, true, data)), 4, 11, true, 8)
+            hamming_get_error_mask(hamming_syndrome(4, true, hamming_encode(4, 8, true, data)), 4, 11, true, 8)
         );
 
         for i in 0 to 4 loop
-            code_extended := encode(4, 8, true, data);
+            code_extended := hamming_encode(4, 8, true, data);
             code_extended := flip_bit(code_extended, i);
             run_test(
                 run, 
-                "get_error_mask(syndrome(encode()))",
+                "hamming_get_error_mask(hamming_syndrome(hamming_encode()))",
                 "Getting error mask of decoded codeword with error on checkbit " & integer'image(i) & ". (extended)",
                 "00000000",
-                get_error_mask(syndrome(4, true, code_extended), 4, 11, true, 8)
+                hamming_get_error_mask(hamming_syndrome(4, true, code_extended), 4, 11, true, 8)
             );
         end loop;
 
 
         for i in 0 to 7 loop
-            code_extended := encode(4, 8, true, data);
+            code_extended := hamming_encode(4, 8, true, data);
             code_extended := flip_bit(code_extended, i + 5);
             run_test(
                 run, 
-                "get_error_mask(syndrome(encode()))",
+                "hamming_get_error_mask(hamming_syndrome())",
                 "Getting error mask of decoded codeword with error on bit " & integer'image(i) & ". (extended)",
                 std_logic_vector(to_unsigned(2 ** i, 8)),
-                get_error_mask(syndrome(4, true, code_extended), 4, 11, true, 8)
+                hamming_get_error_mask(hamming_syndrome(4, true, code_extended), 4, 11, true, 8)
             );
 
         end loop;

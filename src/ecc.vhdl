@@ -149,15 +149,15 @@ begin
     code(code'left downto g_total_parity_bits) <= data_in;
     code(g_total_parity_bits - 1 downto 0) <= chkbits_in;
 
-    syndrome_i <= syndrome(g_parity_bits, g_extended, code);
-    mask       <= get_error_mask(syndrome_i, hamming);
-    se_i       <= single_bit_error(syndrome_i, hamming);
-    de_i       <= double_bit_error(syndrome_i, hamming);
+    syndrome_i <= hamming_syndrome(g_parity_bits, g_extended, code);
+    mask       <= hamming_get_error_mask(syndrome_i, hamming);
+    se_i       <= hamming_single_bit_error(syndrome_i, hamming);
+    de_i       <= hamming_double_bit_error(syndrome_i, hamming);
     co_i       <= not encode = '1' and correct = '1' and (not de_i); 
 
     -- outputs
     data_out     <= data_in xor mask when co_i else data_in;
-    chkbits_out  <= encode_chkbits(hamming, data_in);
+    chkbits_out  <= hamming_encode_chkbits(hamming, data_in);
     single_error <= '1' when se_i else '0';
     double_error <= '1' when de_i else '0';
 end architecture;

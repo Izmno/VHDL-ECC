@@ -128,11 +128,11 @@ architecture behaviour of mask_generator is
     signal de_i: boolean;
     
 begin 
-    se_i       <= single_bit_error(syndrome, hamming);
-    de_i       <= double_bit_error(syndrome, hamming);
+    se_i       <= hamming_single_bit_error(syndrome, hamming);
+    de_i       <= hamming_double_bit_error(syndrome, hamming);
 
 
-    mask       <= get_error_mask(syndrome, hamming);
+    mask       <= hamming_get_error_mask(syndrome, hamming);
     single_error <= '1' when se_i else '0';
     double_error <= '1' when de_i else '0';
 end architecture;

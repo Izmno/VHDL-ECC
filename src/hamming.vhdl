@@ -95,56 +95,56 @@ package hamming is
      function calc_nonpower(limit: integer) return intvec_t;
      function positions(hamming: hamming_t) return intvec_t;
 
-     function base_matrix(p: integer; e: boolean) return matrix;
-     function base_matrix(hamming: hamming_t) return matrix;
-     function generator_matrix(p: integer; e: boolean) return matrix;
-     function generator_matrix(hamming: hamming_t) return matrix;
-     function parity_check_matrix(p: integer; e: boolean) return matrix;
-     function parity_check_matrix(hamming: hamming_t) return matrix;
+     function hamming_base_matrix(p: integer; e: boolean) return matrix;
+     function hamming_base_matrix(hamming: hamming_t) return matrix;
+     function hamming_generator_matrix(p: integer; e: boolean) return matrix;
+     function hamming_generator_matrix(hamming: hamming_t) return matrix;
+     function hamming_parity_check_matrix(p: integer; e: boolean) return matrix;
+     function hamming_parity_check_matrix(hamming: hamming_t) return matrix;
 
-     function encode(gen_matrix: matrix; data: std_logic_vector) return std_logic_vector;
-     function encode(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
-     function encode(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
-     function encode(gen_matrix: matrix; d: integer; data: std_logic_vector) return std_logic_vector;
-     function encode(p: integer; d: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
+     function hamming_encode(gen_matrix: matrix; data: std_logic_vector) return std_logic_vector;
+     function hamming_encode(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
+     function hamming_encode(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
+     function hamming_encode(gen_matrix: matrix; d: integer; data: std_logic_vector) return std_logic_vector;
+     function hamming_encode(p: integer; d: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
 
-     function encode_chkbits(b_matrix: matrix; data: std_logic_vector) return std_logic_vector;
-     function encode_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
-     function encode_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
+     function hamming_encode_chkbits(b_matrix: matrix; data: std_logic_vector) return std_logic_vector;
+     function hamming_encode_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector;
+     function hamming_encode_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector;
 
-     function syndrome(p_check_matrix: matrix; code: std_logic_vector) return std_logic_vector;
-     function syndrome(p: integer; e: boolean; code: std_logic_vector) return std_logic_vector;
-     function syndrome(hamming: hamming_t; code: std_logic_vector) return std_logic_vector;
+     function hamming_syndrome(p_check_matrix: matrix; code: std_logic_vector) return std_logic_vector;
+     function hamming_syndrome(p: integer; e: boolean; code: std_logic_vector) return std_logic_vector;
+     function hamming_syndrome(hamming: hamming_t; code: std_logic_vector) return std_logic_vector;
 
-     function get_num_errors(syndrome: std_logic_vector; e: boolean) return integer;
-     function get_num_errors(syndrome: std_logic_vector; h: hamming_t) return integer;
-     function single_bit_error(syndrome: std_logic_vector; e: boolean) return boolean;
-     function single_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean;
-     function double_bit_error(syndrome: std_logic_vector; e: boolean) return boolean;
-     function double_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean;
+     function hamming_get_num_errors(syndrome: std_logic_vector; e: boolean) return integer;
+     function hamming_get_num_errors(syndrome: std_logic_vector; h: hamming_t) return integer;
+     function hamming_single_bit_error(syndrome: std_logic_vector; e: boolean) return boolean;
+     function hamming_single_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean;
+     function hamming_double_bit_error(syndrome: std_logic_vector; e: boolean) return boolean;
+     function hamming_double_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean;
 
      -- c: MAXIMUM code length
      -- e: extended
      -- returns integer of error assuming code is (c - 1 downto 0) and checkbits are appended on LSB side
      -- returns c if there is no error
-     function get_error_index(syndrome: std_logic_vector; c: integer; e: boolean) return integer;
-     function get_error_index(syndrome: std_logic_vector; h: hamming_t) return integer;
+     function hamming_get_error_index(syndrome: std_logic_vector; c: integer; e: boolean) return integer;
+     function hamming_get_error_index(syndrome: std_logic_vector; h: hamming_t) return integer;
 
      -- p: parity bits (without extended bit)
      -- d: MAXIMUM data bits 
      -- e: extended
      -- returns integer of error in data vector assuming code is (high - 1 downto 0) and checkbits are appended on LSB side
      -- returns d if there is no error in data
-     function get_data_error_index(syndrome: std_logic_vector; p: integer; d: integer; e: boolean) return integer;
-     function get_data_error_index(syndrome: std_logic_vector; h: hamming_t) return integer;
+     function hamming_get_data_error_index(syndrome: std_logic_vector; p: integer; d: integer; e: boolean) return integer;
+     function hamming_get_data_error_index(syndrome: std_logic_vector; h: hamming_t) return integer;
 
      -- index: DATA error index
      -- d: ACTUAL data bits
      -- dm: MAXIMUM data bits
      -- p: parity bits (without extended bit)
      -- e: extended
-     function get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector;
-     function get_error_mask(syndrome: std_logic_vector; h: hamming_t) return std_logic_vector;
+     function hamming_get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector;
+     function hamming_get_error_mask(syndrome: std_logic_vector; h: hamming_t) return std_logic_vector;
 
      -- maps index of datastring (1 indexed) to index in the hamming code (1 indexed)
      function calc_dbit_index(i: integer) return integer;
@@ -344,7 +344,7 @@ package body hamming is
      -- the extra parity bit for extended hamming codes) 
      -- @param e: boolean: whether to use an extra parity bit
      -- @returns matrix: the base matrix
-     function base_matrix(p: integer; e: boolean) return matrix is 
+     function hamming_base_matrix(p: integer; e: boolean) return matrix is 
           variable d: integer    := calc_data_bits(p);
           variable pos: intvec_t(d - 1 downto 0) := calc_nonpower(p);
 
@@ -365,7 +365,7 @@ package body hamming is
           else 
                return m;
           end if;
-     end function base_matrix;
+     end function;
      
      -- base_matrix
      -- 
@@ -384,10 +384,10 @@ package body hamming is
      -- @param hamming: hamming_t the hamming code for which to calculate 
      -- the base matrix 
      -- @returns matrix: the base matrix
-     function base_matrix(hamming: hamming_t) return matrix is 
+     function hamming_base_matrix(hamming: hamming_t) return matrix is 
      begin 
-          return base_matrix(hamming.parity_bits, hamming.extended);
-     end function base_matrix;
+          return hamming_base_matrix(hamming.parity_bits, hamming.extended);
+     end function;
 
      -- generator_matrix
      -- 
@@ -403,10 +403,10 @@ package body hamming is
      -- excluding the extra parity bit for extended hamming codes
      -- @param e: boolean: use extended hamming codes 
      -- @returns matrix: the generator matrix
-     function generator_matrix(p: integer; e: boolean) return matrix is
+     function hamming_generator_matrix(p: integer; e: boolean) return matrix is
      begin 
-          return concat_identity_left(base_matrix(p, e));
-     end function generator_matrix;
+          return concat_identity_left(hamming_base_matrix(p, e));
+     end function;
 
      -- generator_matrix
      -- 
@@ -421,10 +421,10 @@ package body hamming is
      -- @param hamming: hamming_t the hamming code for which to calculate 
      -- the generator matrix 
      -- @returns matrix: the generator matrix
-     function generator_matrix(hamming: hamming_t) return matrix is
+     function hamming_generator_matrix(hamming: hamming_t) return matrix is
      begin 
-          return concat_identity_left(base_matrix(hamming));
-     end function generator_matrix;
+          return concat_identity_left(hamming_base_matrix(hamming));
+     end function;
 
      -- parity_check_matrix
      -- 
@@ -440,10 +440,10 @@ package body hamming is
      -- excluding the extra parity bit for extended hamming codes
      -- @param e: boolean: use extended hamming codes 
      -- @returns matrix: the parity check matrix
-     function parity_check_matrix(p: integer; e: boolean) return matrix is 
+     function hamming_parity_check_matrix(p: integer; e: boolean) return matrix is 
      begin 
-          return concat_identity_right(transpose(base_matrix(p, e)));
-     end function parity_check_matrix;
+          return concat_identity_right(transpose(hamming_base_matrix(p, e)));
+     end function;
      
      -- parity_check_matrix
      -- 
@@ -458,10 +458,10 @@ package body hamming is
      -- @param hamming: hamming_t the hamming code for which to calculate 
      -- the parity check matrix 
      -- @returns matrix: the parity check matrix
-     function parity_check_matrix(hamming: hamming_t) return matrix is 
+     function hamming_parity_check_matrix(hamming: hamming_t) return matrix is 
      begin 
-          return concat_identity_right(transpose(base_matrix(hamming)));
-     end function parity_check_matrix;
+          return concat_identity_right(transpose(hamming_base_matrix(hamming)));
+     end function;
      
      -- encode 
      -- 
@@ -479,25 +479,11 @@ package body hamming is
      -- @param gen_matrix: matrix: The generator matrix to be used
      -- @param data: std_logic_vector: The data to be encoded
      -- @returns std_logic_vector: The encoded string
-     function encode(gen_matrix: matrix; data: std_logic_vector) return std_logic_vector is 
+     function hamming_encode(gen_matrix: matrix; data: std_logic_vector) return std_logic_vector is 
           variable v_in : vector(gen_matrix'range(1));
      begin 
-          return encode(gen_matrix, gen_matrix'length(1), data);
-          -- if data'length > v_in'length then
-          --      assert false 
-          --           report "Data vector is too long for this generator matrix, cropping to " 
-          --                & integer'image(v_in'length)
-          --                & " bits"
-          --           severity warning;
-          --      v_in := to_vector(data(v_in'range));
-          -- elsif data'length = v_in'length then 
-          --      v_in := to_vector(data);
-          -- else
-          --      v_in(v_in'range'left - 1 downto data'length) := (others => '0');
-          --      v_in(data'range'left downto 0) := to_vector(data);
-          -- end if;
-          -- return to_logic_vector(v_in * gen_matrix);
-     end function encode;
+          return hamming_encode(gen_matrix, gen_matrix'length(1), data);
+     end function;
 
      -- encode 
      -- 
@@ -517,10 +503,10 @@ package body hamming is
      -- @param e: boolean: Whether to use extended hamming codes
      -- @param data: std_logic_vector: The data to be encoded
      -- @returns std_logic_vector: The encoded string
-     function encode(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector is 
+     function hamming_encode(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector is 
      begin 
-          return encode(generator_matrix(p, e), data);
-     end function encode;
+          return hamming_encode(hamming_generator_matrix(p, e), data);
+     end function;
 
      -- encode 
      -- 
@@ -539,10 +525,10 @@ package body hamming is
      -- @param hamming: hamming_t: The parameters of the Hamming code
      -- @param data: std_logic_vector: The data to be encoded
      -- @returns std_logic_vector: The encoded string
-     function encode(hamming: hamming_t; data: std_logic_vector) return std_logic_vector is 
+     function hamming_encode(hamming: hamming_t; data: std_logic_vector) return std_logic_vector is 
      begin 
-          return encode(generator_matrix(hamming), hamming.data_bits, data);
-     end function encode;
+          return hamming_encode(hamming_generator_matrix(hamming), hamming.data_bits, data);
+     end function;
 
      -- encode 
      -- 
@@ -564,7 +550,7 @@ package body hamming is
      -- @param d: integer: The number of data bits in the return value
      -- @param data: std_logic_vector: The data to be encoded
      -- @returns std_logic_vector: The encoded string
-     function encode(gen_matrix: matrix; d: integer; data: std_logic_vector) return std_logic_vector is 
+     function hamming_encode(gen_matrix: matrix; d: integer; data: std_logic_vector) return std_logic_vector is 
           variable data_bits: integer;
           variable data_bits_available: integer;
           variable parity_bits: integer;
@@ -594,7 +580,7 @@ package body hamming is
           code := to_logic_vector(data_v * gen_matrix);
           return code(parity_bits + data_bits - 1 downto 0);
       
-     end function encode;
+     end function;
 
      -- encode 
      -- 
@@ -616,13 +602,13 @@ package body hamming is
      -- @param d: integer: The number of data bits in the return value
      -- @param data: std_logic_vector: The data to be encoded
      -- @returns std_logic_vector: The encoded string
-     function encode(p: integer; d: integer; e: boolean; data: std_logic_vector) return std_logic_vector is 
+     function hamming_encode(p: integer; d: integer; e: boolean; data: std_logic_vector) return std_logic_vector is 
      begin 
-          return encode(generator_matrix(p, e), d, data);
-     end function encode;
+          return hamming_encode(hamming_generator_matrix(p, e), d, data);
+     end function;
 
 
-     function encode_chkbits(b_matrix: matrix; data: std_logic_vector) return std_logic_vector is
+     function hamming_encode_chkbits(b_matrix: matrix; data: std_logic_vector) return std_logic_vector is
           variable data_bits : integer := b_matrix'length(1);
           variable data_bits_available : integer := data'length;
           variable data_in_std : vector(data_bits_available - 1 downto 0) := to_vector(data);
@@ -639,17 +625,17 @@ package body hamming is
           return to_logic_vector(data_std * b_matrix);
      end function;
           
-     function encode_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector is 
+     function hamming_encode_chkbits(p: integer; e: boolean; data: std_logic_vector) return std_logic_vector is 
      begin 
-          return encode_chkbits(base_matrix(p, e), data);
+          return hamming_encode_chkbits(hamming_base_matrix(p, e), data);
      end function;
 
-     function encode_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector is 
+     function hamming_encode_chkbits(hamming: hamming_t; data: std_logic_vector) return std_logic_vector is 
      begin 
-          return encode_chkbits(base_matrix(hamming), data);
+          return hamming_encode_chkbits(hamming_base_matrix(hamming), data);
      end function;
 
-     function syndrome(p_check_matrix: matrix; code: std_logic_vector) return std_logic_vector is 
+     function hamming_syndrome(p_check_matrix: matrix; code: std_logic_vector) return std_logic_vector is 
           variable code_bits : integer := p_check_matrix'length(2);
           variable code_bits_available : integer := code'length;
           variable code_in_std : vector(code'length - 1 downto 0) := to_vector(code);
@@ -666,18 +652,18 @@ package body hamming is
           return to_logic_vector(code_std * transpose(p_check_matrix));
      end function;
 
-     function syndrome(p: integer; e: boolean; code: std_logic_vector) return std_logic_vector is 
+     function hamming_syndrome(p: integer; e: boolean; code: std_logic_vector) return std_logic_vector is 
      begin 
-          return syndrome(parity_check_matrix(p, e), code);
+          return hamming_syndrome(hamming_parity_check_matrix(p, e), code);
      end function;
 
-     function syndrome(hamming: hamming_t; code: std_logic_vector) return std_logic_vector is 
+     function hamming_syndrome(hamming: hamming_t; code: std_logic_vector) return std_logic_vector is 
      begin 
-          return syndrome(parity_check_matrix(hamming), code);
+          return hamming_syndrome(hamming_parity_check_matrix(hamming), code);
      end function;
 
 
-     function get_num_errors(syndrome: std_logic_vector; e: boolean) return integer is 
+     function hamming_get_num_errors(syndrome: std_logic_vector; e: boolean) return integer is 
           variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
           variable syndrome_zero: std_logic_vector(syndrome'length - 1 downto 0) := (others => '0');
      begin 
@@ -701,12 +687,12 @@ package body hamming is
 
      end function;
 
-     function get_num_errors(syndrome: std_logic_vector; h: hamming_t) return integer is 
+     function hamming_get_num_errors(syndrome: std_logic_vector; h: hamming_t) return integer is 
      begin 
-          return get_num_errors(syndrome, h.extended);
+          return hamming_get_num_errors(syndrome, h.extended);
      end function;
 
-     function single_bit_error(syndrome: std_logic_vector; e: boolean) return boolean is 
+     function hamming_single_bit_error(syndrome: std_logic_vector; e: boolean) return boolean is 
           variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
           variable syndrome_zero: std_logic_vector(syndrome'length - 1 downto 0) := (others => '0');
      begin 
@@ -725,12 +711,12 @@ package body hamming is
           end if;
      end function;
 
-     function single_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean is 
+     function hamming_single_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean is 
      begin 
-          return single_bit_error(syndrome, h.extended);
+          return hamming_single_bit_error(syndrome, h.extended);
      end function;
 
-     function double_bit_error(syndrome: std_logic_vector; e: boolean) return boolean is 
+     function hamming_double_bit_error(syndrome: std_logic_vector; e: boolean) return boolean is 
           variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
           variable syndrome_zero: std_logic_vector(syndrome'length - 1 downto 0) := (others => '0');
      begin 
@@ -749,12 +735,12 @@ package body hamming is
           end if;
      end function;
 
-     function double_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean is 
+     function hamming_double_bit_error(syndrome: std_logic_vector; h: hamming_t) return boolean is 
      begin 
-          return double_bit_error(syndrome, h.extended);
+          return hamming_double_bit_error(syndrome, h.extended);
      end function;
 
-     function get_error_index(syndrome: std_logic_vector; c: integer; e: boolean) return integer is
+     function hamming_get_error_index(syndrome: std_logic_vector; c: integer; e: boolean) return integer is
           variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
           variable syndrome_pure_std: std_logic_vector(syndrome'length - 2 downto 0) := syndrome_std(syndrome_std'length - 1 downto 1);
           variable syndrome_full_int: natural := to_integer(unsigned(syndrome_std));
@@ -801,13 +787,13 @@ package body hamming is
           end if;
      end function;
 
-     function get_error_index(syndrome: std_logic_vector; h: hamming_t) return integer is 
+     function hamming_get_error_index(syndrome: std_logic_vector; h: hamming_t) return integer is 
      begin 
-          return get_error_index(syndrome, h.max_total_bits, h.extended);
+          return hamming_get_error_index(syndrome, h.max_total_bits, h.extended);
      end function;
 
 
-     function get_data_error_index(syndrome: std_logic_vector; p: integer; d: integer; e: boolean) return integer is
+     function hamming_get_data_error_index(syndrome: std_logic_vector; p: integer; d: integer; e: boolean) return integer is
           variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
           variable syndrome_int: natural;
           variable power: natural := 0;
@@ -841,12 +827,12 @@ package body hamming is
           end if;
      end function;
 
-     function get_data_error_index(syndrome: std_logic_vector; h: hamming_t) return integer is 
+     function hamming_get_data_error_index(syndrome: std_logic_vector; h: hamming_t) return integer is 
      begin 
-          return get_data_error_index(syndrome, h.parity_bits, h.max_data_bits, h.extended);
+          return hamming_get_data_error_index(syndrome, h.parity_bits, h.max_data_bits, h.extended);
      end function;
 
-     function get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector is
+     function hamming_get_error_mask(syndrome: std_logic_vector; p: integer; dm: integer; e: boolean; d: integer) return std_logic_vector is
           variable syndrome_std: std_logic_vector(syndrome'length - 1 downto 0) := syndrome;
           variable syndrome_int: integer;
           variable mask: std_logic_vector(dm + p + 1 downto 1) := (others => '0');
@@ -883,9 +869,9 @@ package body hamming is
           return outmask;
      end function;
 
-     function get_error_mask(syndrome: std_logic_vector; h: hamming_t) return std_logic_vector is
+     function hamming_get_error_mask(syndrome: std_logic_vector; h: hamming_t) return std_logic_vector is
      begin 
-          return get_error_mask(syndrome, h.parity_bits, h.max_data_bits, h.extended, h.data_bits);
+          return hamming_get_error_mask(syndrome, h.parity_bits, h.max_data_bits, h.extended, h.data_bits);
      end function;
 
      -- maps index of datastring (1 indexed) to index in the hamming code (1 indexed)

@@ -120,5 +120,5 @@ architecture behaviour of syndrome_decoder is
     -- hamming properties 
     constant hamming: hamming_t := init_hamming(g_data_bits, g_extended);    
 begin 
-    syndrome <= syndrome(h, code);
+    syndrome <= hamming_syndrome(hamming, code);
 end architecture;
