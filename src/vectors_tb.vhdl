@@ -14,8 +14,8 @@ begin
     
     process is
         variable run: testrun_t := create_run(
-            "Matrix Unittests", 
-            "Basic unittests for all functions in the matrix package"
+            "Vectors Unittests", 
+            "Basic unittests for all functions in the vectors package"
         );
     begin
     
